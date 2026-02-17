@@ -7,5 +7,5 @@ llm = ChatGoogleGenerativeAI(
     model = "gemini-2.5-pro"
 )
 
-response = llm.invoke("Which LLM am I using")
+response = llm.invoke("Write a Short Poem about AI")
 print(response.content)
