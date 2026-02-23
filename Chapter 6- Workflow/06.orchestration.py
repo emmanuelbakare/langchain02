@@ -1,3 +1,10 @@
+#ochestration Workflow  uses the plan_research node to dynamically generate work that will be pass to worker nodes
+# The worker node executes the list of generated options. each option will generate dynamically generate a worker node
+# Results of the workers generated as converged into a final report note 
+
+# Summary: Main topic generates sub titles using orchestrator node, each subtitle is passed to a worker , each subtitle generate content..
+#   for the subtitle using the worker node (conditional node), this is later merged into one output using another node.
+
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import Send
@@ -9,7 +16,7 @@ from work_tool import write_to_file # custom function to copy output to file
 
 load_dotenv()
 
-#define the overall state that will be for the entire grapy
+#define the overall state that will be for the entire graph
 class OverallState(TypedDict):
     research_topic: str
     sources: List[str]
@@ -71,7 +78,8 @@ def plan_research(state:OverallState) ->OverallState:
 
     Generate sources that will provide comrehensive coverage fo the topic
     """
-
+    #this will generate a list of titles in research_plan.sources.
+    # each source will be use to generate a worker.
     research_plan = planner_llm.invoke(prompt)
 
     print(f" Orchestrator Generated: {len(research_plan.sources)}")
@@ -87,6 +95,7 @@ def plan_research(state:OverallState) ->OverallState:
     }
 
 #Node 2:  Worker Node
+# each sources item is passed to one worker to generate a response.
 # this takes in a private state and returns it result back to the overallstate
 # it recieves data in the private WorkerState and return the final result to Overallstate
 def research_worker(state:WorkerState) -> OverallState:

@@ -27,6 +27,12 @@ myPrompt = prompt.invoke({
     "language":"English",
     "country":"Nigeria"
 })
-response = llm.invoke(myPrompt)
+print(myPrompt,"\n", type(myPrompt))
+"""
+outputs:
+messages=[SystemMessage(content='reply every prompt in English language', additional_kwargs={}, response_metadata={}), HumanMessage(content='Who is the president of Nigeria', additional_kwargs={}, response_metadata={})] 
+ <class 'langchain_core.prompt_values.ChatPromptValue'>
+"""
+# response = llm.invoke(myPrompt)
 
-print(response.content)
+# print(response.content)

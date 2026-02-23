@@ -110,7 +110,6 @@ def handle_technical(state:SupportState) -> SupportState:
     }
 
 
-
 #Technical handling
 def handle_refund(state:SupportState) -> SupportState:
 
