@@ -7,7 +7,7 @@ load_dotenv()
 
 llm = ChatOpenAI(model="gpt-4o-mini")
 
-#Demo 1 Invomced Prompt
+#Demo 1 Invoke Prompt
 invoked_prompt = "Where is the Eifefel tower"
 
 response = llm.invoke(invoked_prompt)
@@ -27,7 +27,7 @@ print(f"----Invoked Prompt - Query: {invoked_prompt}")
 for response in batched_response:
     print(f"{response.content}\n\n")
 
-#Demo 3 - Streaming
+#Demo 3 - Streaming output
 
 stream_prompt = "Explain American Football"
 
