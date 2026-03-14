@@ -108,7 +108,7 @@ def calculate_budget(monthly_income: float, expense_category: str )-> str:
 
 
 SYSTEM_PROMPT = """
-You are a helpful perosnal finance assistant.
+You are a helpful personal finance assistant.
 
 Your Capabilities:
 - Check account balance (checking, savings, investment)

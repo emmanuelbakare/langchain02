@@ -1,6 +1,69 @@
-# a Financial Assistant Agent based on user context
-# Adding memory to the agent using InMemory
+"""
+ADDING MEMORY TO AGENT
+======================
+Add memory so that your agent can remember previous conversation in new response.
 
+New Imports:
+============
+from langgraph.checkpoint.memory import InMemorySaver
+
+
+1. get a memory checkpoint by instantiateing an InMemorySaver
+============================================================
+from langgraph.checkpoint.memory import InMemorySaver
+checkpointer = InMemorySaver()
+
+2. Create an Agent and store the memory checkpoint as a parameter
+===============================================================
+# use the checkpoint parameter to get the checkpoint you instantiated in 1 above
+
+
+agent = create_agent(
+    model = basic_model,
+    tools =[
+        ...
+        tranfer_money
+    ],
+    # system_prompt=SYSTEM_PROMPT,
+    context_schema = UserContext,
+    middleware=[
+        ...
+        handle_tool_errors
+    ],
+    response_format=ToolStrategy(FinancialResponse), 
+    checkpointer=checkpointer, # this give the agent the ability to use memory to remember previous conversation.
+)
+
+
+3. Generate a conversation. Converse with llm. add memory configuration in the agent request to remember conversation
+=======================================================================================================
+# generate memory configuraiton
+memory_config = {"configurable":{"thread_id":"alice-memory-test"}}
+
+ #Query 1:
+    query1 = "What are my account balances"   
+    #invoke agent and print out response
+    response = agent.invoke(
+        {
+            "messages": [{"role":"user","content": query1}]
+        },
+        context=alice_context,
+        config=memory_config  # add the memory configuration to the query
+    )
+
+    structured_response = response["structured_response"]  
+    
+    print(f"\n Summary:\n {structured_response.details}")  
+
+    ##########add more queries
+
+    query2 = "Which account has the most money"
+    ....  invoke agent and print out response
+
+    query3 = "Based on what we discussed, should I move money to my savings"
+    ....   invoke agent and print out response
+
+"""
 from langchain.agents import create_agent
 from langchain.tools import tool
 

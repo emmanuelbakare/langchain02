@@ -1,6 +1,117 @@
-# a Financial Assistant Agent based on user context
-# dynamically choose which llm or prompt to execute for  agent based on the membership tier
+"""
+USING MIDDLEWARE
+================
+Middleware is used to swap model, prompts etc during runtime. It dynamically determine which model or prompt to run at runtime.
+- in this example we will swap models and prompts depending on the type of user membership we have. The agent looks at the user membership to determine which prompt and model to use
 
+New Imports
+=============
+
+- from langchain.chat_models import init_chat_model   # used to instantiate model
+
+- from langchain.agents.middleware import (   
+    wrap_model_call,  # this is a wrapper on a function ( @wrap_model_call). The function determines which model is used
+    dynamic_prompt,  # this a wrapper on a function (@dyanmic_prompt). the function determines which prompt will be used
+    ModelRequest,  # use this to get the context data through runtime in a function. e.g mdoel_request.runtime.context.user_id
+    ModelResponse # used to return the final result from the request using a handler.
+)
+
+
+1. Instantiate each of the models that will be used using the init_chat_model method
+=======================================================
+from langchain.chat_models import init_chat_model
+
+# define the different models that can be used
+basic_model = init_chat_model(
+    "gpt-4o-mini",
+    temperature = 0.5,
+    max_tokens = 512
+)
+premium_model = init_chat_model(
+    "gpt-4o",
+    max_tokens = 2048
+)
+platinum_model = init_chat_model(
+    "gpt-4o"
+)
+
+2. Write the function what will swap model. Wrap it with wrap_model_call
+==========================================================================
+
+@wrap_model_call
+def dynamic_model_selector(request:ModelRequest, handler)->ModelResponse:
+    #this function select a model based on user membership
+
+    # get user membership_tier and user_id through the request:ModelRequest function parameter
+    tier = request.runtime.context.membership_tier   # get the context membership type
+    user_id = request.runtime.context.user_id #get context user_id
+
+    
+    # based on the tier, override the model type as defined using init_chat_model (do same for all tiers)
+    if tier =="platinum":
+        request.override(model=platinum_model)
+    
+    #return the request as a ModelResponse
+    return handler(request)
+
+3. Write the function that swaps prompt based on criteria from the user
+
+@dynamic_prompt
+def tier_based_prompt(request:ModelRequest)->str:
+    #Generate System Prompt based on Membership Tier
+
+    tier = request.runtime.context.membership_tier
+    user_name = request.runtime.context.user_name
+
+    my_prompt = "my basic prompt here" \
+    
+    #default is my_prompt but if tier is platinum, use another prompt etc
+    if tier == "platinum":
+       my_prompt += "adding platinum prompt"
+    elif tier =="premium":
+       my_prompt += "adding premium prompt"
+
+    return my_prompt
+
+4. add the dynamic_model_selector and tier_based_prompt functions as middleware when creating the agent
+======================================================================================================
+-let the basic_model  be the default model. The middleware will swap them dynamically when needed 
+
+agent = create_agent(
+    model = basic_model,
+    tools =[
+        get_account_balance,
+        ...
+    ],
+    context_schema = UserContext,
+    middleware=[
+        dynamic_model_selector,
+        tier_based_prompt
+    ]
+)
+
+
+5. On running,  create the user_data (context), the query. Agent swaps prompt and model according to user membership
+====================================================================================================================
+
+matthew_context = UserContext(
+        user_id = "user_003",
+        user_name="Matthew Johnson",
+        membership_tier="premium",
+        preferred_currency="USD"
+    )
+
+    financial_situation_query = "What's  my financial situation? Check all my accounts and give me advice"
+    response = agent.invoke(
+        {
+            "messages": [{"role":"user","content": financial_situation_query}]
+        },
+        context = matthew_context  # matthew_context is premium so the system will use the premium prompt and model variation
+    )
+
+    print(f"Agent: {response['messages'][-1].content}")
+
+"""
 from langchain.agents import create_agent
 from langchain.tools import tool
 
@@ -49,7 +160,6 @@ class UserContext:
     user_name: str 
     membership_tier: str # basic, premium, platinum
     preferred_currency: str 
-
 
 
 

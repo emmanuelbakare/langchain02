@@ -149,7 +149,7 @@ graph = builder.compile()
 
 result = graph.invoke({
     "topic": "The benefit of morning exercise",
-    "requirements": " Target audeince: busy professionals. Inlcude practicals"
+    "requirements": " Target audience: busy professionals. Include practicals"
 })
 
 print("\n"+ "*"*50)

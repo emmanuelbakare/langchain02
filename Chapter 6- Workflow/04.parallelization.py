@@ -94,7 +94,7 @@ def generate_linkedin(state: OverallState)->OverallState:
 
 #aggregator node 
 def aggregate_post(state:OverallState)-> OverallState:
-    """Combine all platfomrs posts into a formatted final output"""
+    """Combine all platform posts into a formatted final output"""
     
     print(" Aggregator: Combinining all posts....")
     final_output = f"""
