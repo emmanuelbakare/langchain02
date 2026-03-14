@@ -1,5 +1,105 @@
-# a Financial Assistant Agent based on user context
-# handle error from tools using wrap_tool_call middleware
+"""
+MIDDLEWARE 2
+=============
+Middleware can also be used to handle errors coming froma tool. This uses the wrap_tool_call wrapper to capture the error
+in a tool call.
+
+New Imports
+==========
+from langchain_core.messages import ToolMessage  # use this to type check the tool
+from langchain.tools.tool_node import ToolCallRequest  # this gives us access to our tool in our middleware
+
+from langchain.agents.middleware import (
+    ...
+    wrap_tool_call 
+)
+
+1. Have a tool that generates errors
+====================================
+@tool
+def transfer_money(from_account:str, to_account:str, amount:float, runtime:ToolRuntime[UserContext])->str:
+    # function to transfer money between account
+
+    if amount <=0:
+        raise ValueError(" Trandfer must be positive value")
+
+    if amount > 10000:
+        raise ValueError("Transfer Amount exceeds daily limit of 10,000")
+
+    if from_account.lower() == to_account.lower():
+        raise ValueError("Cannot transfer to same account)
+
+    --- write code that raise other errors
+
+
+2. Create the middleware that handles error that comes from any tool function
+===========================================================================
+@wrap_tool_call
+def handle_tool_error(request:ToolCallRequest, handler) - >ToolMessage:
+    # gracefully handle tool execution errors
+    # this method runs when a tool is about to be executed.following this pattern
+    # 1. It tries to run the tool in a try block
+    # 2. If a tool generates an error, the except block runs
+
+    tool_name = reqest.tool_call['name'] #get the tool to 
+    tool_id = request.tool_call['id']
+
+    try:
+        return handler(tool_name)  #run the tool
+
+    except ValueError as e: # if a value error is generated 
+        error_message = f"Tool {tool_name} Failed.  {str(e)}
+        print("Caught ValueError: {e})
+        return ToolMessage(
+        content = error_message,
+        tool_call_id = tool_id
+        )
+
+    except KeyError as e: # write for other Error and also for the general Exception error as done in ValueError
+
+    3. Update the Agent to add the new error handline middleware and tool
+    ====================================================================
+
+    agent = create_agent(
+    model = basic_model,
+    tools =[
+        ...
+        tranfer_money  # newly added tool
+    ],
+    # system_prompt=SYSTEM_PROMPT,
+    context_schema = UserContext,
+    middleware=[
+        ...
+        handle_tool_errors # newly added middleware for handling tool error
+    ]
+)
+
+
+4. Test and Run the Code
+========================
+
+alice_context = UserContext(
+        user_id = "user_001",
+        user_name="Alice Johnson",
+        membership_tier="platinum",
+        preferred_currency="USD"
+    )
+
+    # Test 1: Tranfer moeny that is more than the funds available
+    transfer_money_prompt = "Transfer $5000 from checking to checkings" #unsuccessful transfer - transfer to same account 
+
+    response = agent.invoke(
+        {
+            "messages": [{"role":"user","content": transfer_money_prompt}]
+        },
+        context=alice_context
+    )
+
+    print(f"Agent: {response['messages'][-1].content}")
+
+
+"""
+
 
 from langchain.agents import create_agent
 from langchain.tools import tool

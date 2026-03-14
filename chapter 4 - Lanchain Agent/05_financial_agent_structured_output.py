@@ -1,4 +1,75 @@
-# a Financial Assistant Agent based on user context
+"""
+STRUCTURED OUTPUT
+===============
+-Adding structured output as our final output.
+-this will require to create a pydantic Class pass it as to our agent as response_format through the ToolStrategy Class
+
+New Imports
+===========
+from pydantic import BaseModel, Field
+from typing import Literal
+from langchain.agents.structured_output import ToolStrategy
+
+
+1. Create the Pydantic Class for storing the Structured Output
+=============================================================
+from pydantic import BaseModel, Field
+from typing import Literal
+
+class FinancialResponse(BaseModel):
+    summary:str = ...
+    action_items: list[str] = ...
+    warnings: list[str] = ...
+    confidence: Literal["high","medium","low"] = ...
+
+
+2. Create the Agent and add response_format parameter which takes in the Pydantic Model Class
+=============================================================================================
+#add response_format=ToolStrategy(FinancialResponse)  to the agent parameters to include a structured output
+
+from langchain.agents.structured_output import ToolStrategy
+
+agent = create_agent(
+    model = basic_model,
+    tools =[
+        ...
+        tranfer_money
+    ],
+    context_schema = UserContext,
+    middleware=[
+        ....
+        handle_tool_errors
+    ],
+    response_format=ToolStrategy(FinancialResponse) 
+)
+
+
+3. Create a query that returns structured Output
+================================================
+    query = "What is my financial situation? check all accounts and give me advice."   
+
+    response = agent.invoke(
+        {
+            "messages": [{"role":"user","content": query}]
+        },
+        context=alice_context
+    )
+
+    #** for strucutured respoonse instead of response['messages'][-1].content} we use response["structured_response"]  to get a pydantic structured response
+    structured_response: FinancialResponse = response["structured_response"]  
+    print("\nSTRUCTURED RESPONSE")
+    print(f"\n Summary:\n {structured_response.summary}")  
+    print(f"\n Details:\n {structured_response.details}")  
+    
+    print(f"\n Action Items:\n ")  
+    for item in structured_response.action_items:
+        print(f"* {item}")
+
+    ...etc
+
+
+
+"""
 # output structured output. You will use pydantic
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -224,6 +295,7 @@ def tranfer_money(
     
     #simulate completed transactioin
     return f"Successfully transferred ${amount: .2f} from {from_account} to  {to_account}"
+
 @tool
 def get_account_balance(
     account_type:str, 

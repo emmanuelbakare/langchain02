@@ -1,5 +1,82 @@
-# a Financial Assistant Agent based on user context
-# it get a user and use the user data to answer the financial information
+"""
+In this example we are adding user data such that with a user_id we can get data of a particular user in the system
+
+Needs (What we are introducing in this example):
+- dataclass  -- this  us use to create a class with properties for the user - UserContext class
+- ToolRuntime -- this is used to retrieve the user data in the tools functions. We pass in runtime:ToolRuntime parameter and user runtime.context.<userContext parameter> to get user data inside the function
+
+**Others Are--
+- USER_DATABASE -- contain a dictionary of database record containing record for each user.
+- SYSTEM_PROMPT -- System prompt to pass to agent
+
+1. You define UserContext Like This:
+==============================
+from dataclasses import dataclass
+@dataclass
+class UserContext:
+    user_id: str
+    user_name: str 
+    membership_tier: str # basic, premium, platinum
+    preferred_currency: str 
+
+2. You pass the userContext inside the functions like this. 
+================================================================
+- the runtime:ToolRuntime[UserContext] is what passes in the user data
+
+@tool
+def get_account_balance(account_type:str, runtime: ToolRuntime[UserContext])->str:{
+    
+    # Use runtime.context to retrieve user information inside the function. Eg to get user_id do...
+    user_id = runtime.context.user_id
+    user_rec =  user_data = USER_DATABASE.get(user_id,{}) # pass in the user_id retrieved from the context to the USER_DATABASE to get record specific to the user 
+    
+    }
+
+    
+3. Create the Agent by passing in the context_schema = UserContext to enable the agent be aware of the user
+========================================================================================================
+agent = create_agent(
+    model = "gpt-4o",
+    tools =[
+        get_account_balance,
+        get_recent_transaction,
+        calculate_budget,
+        get_personalized_greeting
+    ],
+    system_prompt=SYSTEM_PROMPT,
+    context_schema = UserContext
+)
+
+
+4. In the main Code first instantiate the context:
+======================================================
+# Instantiate user data for alice  - with user_id = "user_001" etc
+
+alice_context = UserContext(
+        user_id = "user_001",
+        user_name="Alice Johnson",
+        membership_tier="platinum",
+        preferred_currency="USD"
+    )
+
+
+5. Invoke the agent and pass in the question and the context (the user information to work with)
+===============================================================================================
+
+# Query the agent to Check Balance
+
+    user_query = "What's my checking account balance?"
+
+    response = agent.invoke(
+        {
+            "messages": [{"role":"user","content": user_query}]
+        },
+        context = alice_context # pass in the user information to use in the query
+    )
+
+    print(f"Agent: {response['messages'][-1].content}")
+
+"""
 
 from langchain.agents import create_agent
 from langchain.tools import tool

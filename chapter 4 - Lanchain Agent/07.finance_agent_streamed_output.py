@@ -1,5 +1,29 @@
-# a Financial Assistant Agent based on user context
-# streaming the output
+"""
+STREAMED OUTPUT
+==============
+- this is for how the response is outputed
+- intead of using agent.invoke, you use agent.streamed
+- not that you cannot stram structured output. We have to revert to the normal response type - string.
+
+1. Use stream instead of invoke. Add the stream_mode parameter - this returns a chunk we can loop through
+===============================
+- stream_mode parameter can be values which bring out all or update which brings it out one after the other
+
+for chunk in agent_for_streaming.stream(
+        {
+            "messages": [{"role":"user","content": query1}]
+        },
+        context=bob_context,
+        config= bob_config,
+        stream_mode="updates" # other options are messages, tasks, values, custom, debug, checkpoints
+    ):
+    #this returns another dictionary we can loop through
+    for step,data in chunk.items():
+        print(f"Step:{step}")
+        print(f"Content : {data['messages'][-1].content_blocks}")
+
+    # for stream_mode="values" ... getting out the data is different
+"""
 
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -452,21 +476,39 @@ def main():
 
     query1 = "What's my financial situation? check all my account and give me advice"   
     #*** invoke the agent using stream method instead of invoke method, pass in the context and the memory
+    
+    # When using stream_mode = "updates"
     for chunk in agent_for_streaming.stream(
         {
             "messages": [{"role":"user","content": query1}]
         },
         context=bob_context,
         config= bob_config,
-        stream_mode="values" # other options are messages, tasks, values, custom, debug, checkpoints
+        stream_mode="updates" # other options are messages, tasks, values, custom, debug, checkpoints
     ):
-        #get the last message
-        latest_message = chunk['messages'][-1]
-        #if the last message is a message display it, if it is a tool, return the tools it is intending to call.
-        if latest_message.content:
-            print(f"Agent: {latest_message.content}")
-        elif latest_message.tool_calls:
-            print(f"Calling Tool {[tool_call['name'] for tool_call in latest_message.tool_calls]}")
+        for step, data in chunk.items():
+            print(f"Step: {step}")
+            print(f"Content: {data['messages'][-1].content_blocks}")
+         
+
+
+
+    # When using stream_mode = "updates"
+    # for chunk in agent_for_streaming.stream(
+    #     {
+    #         "messages": [{"role":"user","content": query1}]
+    #     },
+    #     context=bob_context,
+    #     config= bob_config,
+    #     stream_mode="values" # other options are messages, tasks, values, custom, debug, checkpoints
+    # ):
+    #     #get the last message
+    #     latest_message = chunk['messages'][-1]
+    #     #if the last message is a message display it, if it is a tool, return the tools it is intending to call.
+    #     if latest_message.content:
+    #         print(f"Agent: {latest_message.content}")
+    #     elif latest_message.tool_calls:
+    #         print(f"Calling Tool {[tool_call['name'] for tool_call in latest_message.tool_calls]}")
         
 
  
